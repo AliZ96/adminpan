@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <label for="abc">Ürün adı</label>
+    <input type="text" id="isim" /><br />
+
+    <label for="abcdef">Ürün fiyatı</label>
+    <input type="text" id="fiyat" oninput="sadeceSayisalGiris(event)" /><br />
+
+    <label for="abcde">Ürün stok</label>
+    <input id="stok" type="text" oninput="sadeceSayisalGiris2(event)" /><br />
+
+    <button id="btnid" onclick="myFunction()">Ürünü Göster</button>
+    <button id="raporla" onclick="raporVer()">RAPOR</button>
+
+    <p id="demo"></p>
+    <p id="sec"></p>
+
+    <table id="tablo">
+      <thead>
+        <tr>
+          <th>Ürün Adı ....</th>
+          <th>Stok....</th>
+          <th>Fiyat....</th>
+          <th>Total Fiyat....</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <div id="rapor"></div>
+      </tbody>
+          
+    </table>
+
+    <script>
+      let products = [];
+
+      document.addEventListener("keydown", function (event) {
+        // Enter tuşuna basıldığını kontrol et (Enter'ın keyCode'u 13'tür)
+        if (event.keyCode === 13) {
+          // İstediğiniz işlevi burada tetikleyin
+          myFunction();
+        }
+      });
+
+      var firsttime = 1;
+      var cell1, cell2, cell3, cell4;
+
+      function generateGUID() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            var r = (Math.random() * 16) | 0,
+              v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      }
+
+      function myFunction() {
+        if (!warningForInputs()) {
+          return;
+        }
+        var x = document.getElementById("isim").value;
+        var y = document.getElementById("stok").value;
+        var z = document.getElementById("fiyat").value;
+        var toplamDepo = y * z;
+
+        if (isimExists(x)) {
+          alert(x + " ürünü zaten listede var!");
+          return;
+        }
+        var newRow = tableCreator(x, y, z, toplamDepo);
+
+        arrayCreator(x, y, z, newRow);
+
+        inputDeleter("isim");
+        inputDeleter("stok");
+        inputDeleter("fiyat");
+
+        //ALERTI SADECE 1 KERE VERMESİNİ İSTEDĞİM İÇİN IF BLOĞUNU BURAYA KOYDUM
+        if (firsttime === 1) {
+          alert(
+            "Ürün Adı: " +
+              x +
+              "\nÜrün Fiyatı: " +
+              y +
+              "\nÜrün Stok: " +
+              z +
+              "\nToplam Depo Tutarı: " +
+              toplamDepo
+          );
+          firsttime++;
+        }
+      }
+
+      function arrayCreator(x, y, z, newRow) {
+        let product1 = {
+          names: x,
+          price: z,
+          stock: y,
+          id: newRow.id,
+        };
+        products.push(product1);
+        console.log(products);
+      }
+
+      function tableCreator(x, y, z, toplamDepo) {
+        var table = document
+          .getElementById("tablo")
+          .getElementsByTagName("tbody")[0];
+        var newRow = table.insertRow(table.rows.length);
+        newRow.id = generateGUID();
+
+        cell1 = newRow.insertCell(0);
+        cell2 = newRow.insertCell(1);
+        cell3 = newRow.insertCell(2);
+        cell4 = newRow.insertCell(3);
+        cell5 = newRow.insertCell(4);
+        cell6 = newRow.insertCell(5);
+        cell1.innerHTML = document.getElementById("isim").value;
+        cell2.innerHTML = document.getElementById("stok").value;
+        cell3.innerHTML = document.getElementById("fiyat").value;
+        cell4.innerHTML = z * y;
+        cell5.innerHTML =
+          '<button style="background-color: red; color: white;" onclick="deleteRow(\'' +
+          newRow.id +
+          "')\">Sil</button>";
+
+        return newRow;
+      }
+      function isimExists(name) {
+        var filteredProducts = products.filter(function (product) {
+          return product.names === name;
+        });
+
+        return filteredProducts.length > 0;
+      }
+
+      function raporVer() {
+        let productCount = products.length;
+        let totalStock = 0;
+        let totalPrice = 0;
+
+        for (let i = 0; i < products.length; i++) {
+          totalStock += parseInt(products[i].stock);
+          totalPrice +=
+            parseInt(products[i].price) * parseInt(products[i].stock);
+        }
+        let raporText =
+          "Toplam Ürün Sayısı: " +
+          productCount +
+          "<br>Toplam Stok: " +
+          totalStock +
+          "<br>Toplam Fiyat: " +
+          totalPrice +
+          "<br>Stoğu en az ürün:" +
+          findMinStock() +
+          "<br>Fiyatı en Yüksek ürün:" +
+          findMaxPrice();
+
+        document.getElementById("rapor").innerHTML = raporText;
+      }
+      function findMinStock() {
+        let minStock = parseInt(products[0].stock);
+        for (let i = 1; i < products.length; i++) {
+          if (parseInt(products[i].stock) < minStock) {
+            minStock = parseInt(products[i].stock);
+          }
+        }
+        return findNameOfMinStock(minStock);
+      }
+      function findNameOfMinStock(stockNumber) {
+        for (let index = 0; index < products.length; index++) {
+          if (parseInt(products[index].stock) === stockNumber)
+            return products[index].names;
+        }
+        return 0;
+      }
+      function findMaxPrice() {
+        let maxPrice = parseInt(products[0].price);
+        for (let index = 1; index < products.length; index++) {
+          if (parseInt(products[index].price) > maxPrice)
+            maxPrice = parseInt(products[index].price);
+        }
+        return findNameOfMaxPrice(maxPrice);
+      }
+
+      function findNameOfMaxPrice(maxPrice) {
+        for (let index = 0; index < products.length; index++) {
+          if (parseInt(products[index].price) === maxPrice)
+            return products[index].names;
+        }
+        return 0;
+      }
+
+      function warningForInputs() {
+        let controllerForIsim;
+        let controllerForFiyat;
+        let controllerForStok;
+
+        let getIntoAlert;
+        if (document.getElementById("isim").value === "") {
+          controllerForIsim = "İsim değeri boş bırakılamaz. \n";
+
+          getIntoAlert = true;
+        } else {
+          controllerForIsim = "";
+        }
+        if (document.getElementById("fiyat").value === "") {
+          controllerForFiyat = "Fiyat değeri bos bırakılamaz \n";
+          getIntoAlert = true;
+        } else {
+          controllerForFiyat = "";
+        }
+        if (document.getElementById("stok").value === "") {
+          controllerForStok = "Stok değeri boş bırakılamaz \n";
+          getIntoAlert = true;
+        } else {
+          controllerForStok = "";
+        }
+        if (getIntoAlert === true) {
+          alert(
+            controllerForFiyat +
+              " " +
+              controllerForIsim +
+              " " +
+              controllerForStok
+          );
+          return false;
+        }
+        return true;
+
+        if (
+          document.getElementById("isim").value.length < 1 ||
+          document.getElementById("isim").value.length > 20
+        ) {
+          controllerForIsim =
+            "Ürün ismi en az 1 en fazla 20 karakter olmalıdır.\n";
+          inputDeleter("isim");
+          getIntoAlert = true;
+        } else controllerForIsim = "";
+
+        if (document.getElementById("stok").value === "0") {
+          controllerForFiyat = "Ürün fiyatı 0 değerini alamaz\n";
+          inputDeleter("stok");
+          getIntoAlert = true;
+        } else controllerForFiyat = "";
+
+        if (document.getElementById("fiyat").value === "0") {
+          controllerForStok = "Ürün stoğu 0 değerini alamaz";
+          inputDeleter("fiyat");
+          getIntoAlert = true;
+        } else controllerForStok = "";
+
+        if (getIntoAlert === true) {
+          alert(controllerForIsim + controllerForFiyat + controllerForStok);
+          return;
+        }
+      }
+
+      function inputDeleter(valuess) {
+        document.getElementById(valuess).value = "";
+      }
+
+      function deleteRow(index) {
+        var rowToDelete = document.getElementById(index);
+        var productId = rowToDelete.id;
+        rowToDelete.remove();
+        products = products.filter((product) => product.id !== productId);
+      }
+      function sadeceSayisalGiris2(event) {
+        let inputValues = event.target.value;
+        let cleandValue = "";
+        for (var k = 0; k < inputValues.length; k++) {
+          let char = inputValues[k];
+
+          if (char >= "0" && char <= "9") cleandValue += char;
+        }
+        event.target.value = cleandValue;
+      }
+
+      function sadeceSayisalGiris(event) {
+        var inputValue = event.target.value;
+        var hasDot = false;
+        var cleanedValue = "";
+
+        for (var i = 0; i < inputValue.length; i++) {
+          var char = inputValue[i];
+
+          if (char >= "0" && char <= "9") {
+            // Rakam ise direkt ekleyebiliriz
+            cleanedValue += char;
+          } else if (char === "." && !hasDot) {
+            // İlk noktayı ekleyebiliriz
+            cleanedValue += char;
+            hasDot = true;
+          }
+        }
+        event.target.value = cleanedValue;
+      }
+    </script>
+    <p></p>
+  </body>
+</html>
